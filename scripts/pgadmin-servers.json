@@ -1,0 +1,13 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "Agentic PostgreSQL",
+      "Group": "Agentic AI Lab",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "agentic_ai",
+      "Username": "agentic_admin",
+      "SSLMode": "prefer"
+    }
+  }
+}

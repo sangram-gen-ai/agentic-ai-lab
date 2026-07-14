@@ -1,0 +1,32 @@
+.env
+*.log
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Docker
+docker-compose.override.yml
+
+# Backups (created by scripts/backup.sh)
+backups/
+
+# Runtime data (keep folder structure via .gitkeep)
+data/postgres/**
+!data/postgres/.gitkeep
+data/n8n/**
+!data/n8n/.gitkeep
+data/redis/**
+!data/redis/.gitkeep
+data/qdrant/**
+!data/qdrant/.gitkeep
+data/minio/**
+!data/minio/.gitkeep
+
+# Sample / uploaded documents (keep category folders)
+documents/*
+!documents/*/
+documents/*/*
+!documents/*/.gitkeep

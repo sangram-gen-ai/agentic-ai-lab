@@ -1,0 +1,2 @@
+# Export and version-control n8n workflow JSON files here.
+# Runtime state (workflows, credentials, executions) lives in PostgreSQL (agentic_ai).
