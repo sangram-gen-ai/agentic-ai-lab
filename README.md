@@ -286,6 +286,15 @@ agentic-ai-lab/
 
 ---
 
+## Phase 1 Test
+
+```bash
+chmod +x scripts/test-phase1.sh
+./scripts/test-phase1.sh
+```
+
+Automated checks: container status, health endpoints, Redis, PostgreSQL, n8n tables, data folders, and internal networking.
+
 ## Backup & Restore
 
 ```bash
