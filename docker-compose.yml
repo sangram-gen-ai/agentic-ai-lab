@@ -170,22 +170,22 @@ services:
         condition: service_healthy
 
   # ---------------------------------------------------------------------------
-  # Phase 2 — Spring Boot + Spring AI (uncomment when ready)
+  # Phase 2 — Spring Boot + Spring AI + AWS Bedrock
   # ---------------------------------------------------------------------------
-  # spring-ai:
-  #   build: ./services/spring-ai
-  #   container_name: agentic-spring-ai
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   ports:
-  #     - "${SPRING_PORT:-8080}:8080"
-  #   networks:
-  #     - agentic-ai-network
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  spring-ai:
+    build: ./services/spring-ai
+    container_name: agentic-spring-ai
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${SPRING_PORT:-8080}:8080"
+    networks:
+      - agentic-ai-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   # ---------------------------------------------------------------------------
   # Phase 3 — FastAPI document ingestion (uncomment when ready)

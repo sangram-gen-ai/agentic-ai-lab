@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: agentic-spring-ai
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres:5432/agentic_ai}
+    username: ${POSTGRES_USER:agentic_admin}
+    password: ${POSTGRES_PASSWORD:}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: public
+
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+  ai:
+    bedrock:
+      aws:
+        region: ${AWS_REGION:us-east-1}
+        access-key: ${AWS_ACCESS_KEY_ID:}
+        secret-key: ${AWS_SECRET_ACCESS_KEY:}
+      converse:
+        chat:
+          options:
+            model: ${BEDROCK_MODEL_ID:amazon.nova-lite-v1:0}
+            temperature: 0.7
+            max-tokens: 1024
+
+server:
+  port: ${SPRING_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+agentic:
+  ai:
+    system-prompt: >
+      You are an enterprise AI assistant for the Agentic AI Enterprise Lab.
+      Provide concise, accurate, and professional answers.
+  redis:
+    # Multi-turn chat history TTL and cap (oldest turns dropped first)
+    session-ttl-minutes: 30
+    session-max-messages: 20
+    # Fixed-window rate limit per sessionId (protects Bedrock cost)
+    rate-limit-max: 20
+    rate-limit-window-seconds: 60
