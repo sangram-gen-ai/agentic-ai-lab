@@ -14,7 +14,15 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        default_schema: public
+        default_schema: spring_ai
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # Own schema, separate from "public" (shared with n8n) — see scripts/init-db.sql
+    # for why: n8n_user's default privileges on "public" must never reach this data.
+    schemas: spring_ai
+    default-schema: spring_ai
 
   data:
     redis:
@@ -48,6 +56,15 @@ management:
       show-details: when_authorized
 
 agentic:
+  security:
+    admin:
+      username: ${ADMIN_USERNAME:admin}
+      password: ${ADMIN_PASSWORD:change_me_admin}
+  audit:
+    # chat_audit_log has no TTL like Redis does — this scheduled purge is its
+    # retention policy. Runs daily at 03:00; entries older than N days are deleted.
+    retention-days: ${AUDIT_RETENTION_DAYS:90}
+    purge-cron: "0 0 3 * * *"
   ai:
     system-prompt: >
       You are an enterprise AI assistant for the Agentic AI Enterprise Lab.
@@ -56,6 +73,9 @@ agentic:
     # Multi-turn chat history TTL and cap (oldest turns dropped first)
     session-ttl-minutes: 30
     session-max-messages: 20
-    # Fixed-window rate limit per sessionId (protects Bedrock cost)
+    # Fixed-window rate limit per client IP, not sessionId — see ChatController's
+    # clientKey(): sessionId is caller-supplied and freshly minted per stateless
+    # request, so keying on it would let stateless/runaway callers bypass this.
+    # (Protects Bedrock cost.)
     rate-limit-max: 20
     rate-limit-window-seconds: 60

@@ -1,38 +1,50 @@
 package com.agentic.lab.springai.controller;
 
+import com.agentic.lab.springai.config.SecurityConfig;
 import com.agentic.lab.springai.dto.ChatRequest;
+import com.agentic.lab.springai.entity.ChatAuditLog;
+import com.agentic.lab.springai.service.ChatAuditService;
 import com.agentic.lab.springai.service.ChatSessionService;
 import com.agentic.lab.springai.service.RateLimitExceededException;
 import com.agentic.lab.springai.service.RateLimitService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ChatController.class)
-@Import({ApiExceptionHandler.class, ChatControllerTest.MockChatClientConfig.class})
+@Import({ApiExceptionHandler.class, ChatControllerTest.MockChatClientConfig.class, SecurityConfig.class})
 @TestPropertySource(properties = "spring.ai.bedrock.converse.chat.options.model=amazon.nova-lite-v1:0")
 class ChatControllerTest {
 
@@ -55,6 +67,9 @@ class ChatControllerTest {
 
     @MockitoBean
     RateLimitService rateLimitService;
+
+    @MockitoBean
+    ChatAuditService chatAuditService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -85,6 +100,13 @@ class ChatControllerTest {
                 .andExpect(jsonPath("$.rateLimitRemaining").value(19));
 
         verify(chatSessionService).append("generated-session-id", "hello", "mocked answer");
+        verify(chatAuditService).record(
+                eq("generated-session-id"),
+                eq("hello"),
+                eq("mocked answer"),
+                eq("amazon.nova-lite-v1:0"),
+                anyString(),
+                anyLong());
     }
 
     @Test
@@ -110,5 +132,47 @@ class ChatControllerTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("Retry-After", "60"))
                 .andExpect(jsonPath("$.error").value("rate_limit_exceeded"));
+    }
+
+    @Test
+    void auditTrailWithoutCredentialsIsUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/chat/sessions/some-session/audit"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void auditTrailWithWrongCredentialsIsForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/chat/sessions/some-session/audit")
+                        .with(SecurityMockMvcRequestPostProcessors.httpBasic("admin", "wrong-password")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void auditTrailWithValidCredentialsSucceeds() throws Exception {
+        when(chatAuditService.findBySession(eq("some-session"), any(Pageable.class)))
+                .thenReturn(List.of(new ChatAuditLog(
+                        "some-session", "hi", "hello", "amazon.nova-lite-v1:0", "127.0.0.1", 42L)));
+
+        mockMvc.perform(get("/api/v1/chat/sessions/some-session/audit")
+                        .with(SecurityMockMvcRequestPostProcessors.httpBasic("admin", "change_me_admin")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].sessionId").value("some-session"))
+                .andExpect(jsonPath("$[0].userMessage").value("hi"));
+    }
+
+    @Test
+    void auditTrailPassesPageSizeQueryParamsThrough() throws Exception {
+        when(chatAuditService.findBySession(eq("some-session"), any(Pageable.class)))
+                .thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/api/v1/chat/sessions/some-session/audit?page=2&size=10")
+                        .with(SecurityMockMvcRequestPostProcessors.httpBasic("admin", "change_me_admin")))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<Pageable> captor = ArgumentCaptor.forClass(Pageable.class);
+        verify(chatAuditService).findBySession(eq("some-session"), captor.capture());
+        Pageable used = captor.getValue();
+        assertThat(used.getPageNumber()).isEqualTo(2);
+        assertThat(used.getPageSize()).isEqualTo(10);
     }
 }

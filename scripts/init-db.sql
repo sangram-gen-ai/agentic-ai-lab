@@ -12,6 +12,12 @@ CREATE USER n8n_user WITH PASSWORD 'change_me_n8n';
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- Dedicated schema for the Spring AI service (chat_audit_log, etc.), owned by
+-- agentic_admin. Kept out of "public" on purpose: the ALTER DEFAULT PRIVILEGES
+-- below grants n8n_user access to every future table in "public", and this
+-- table holds full chat transcripts n8n has no business reading or writing.
+CREATE SCHEMA IF NOT EXISTS spring_ai AUTHORIZATION agentic_admin;
+
 -- n8n creates and owns its tables in public schema:
 --   workflow_entity, credentials_entity, execution_entity, execution_data, ...
 GRANT USAGE, CREATE ON SCHEMA public TO n8n_user;
