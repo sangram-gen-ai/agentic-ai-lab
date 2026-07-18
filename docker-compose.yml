@@ -188,21 +188,17 @@ services:
         condition: service_healthy
 
   # ---------------------------------------------------------------------------
-  # Phase 3 — FastAPI document ingestion (uncomment when ready)
+  # Phase 3 — FastAPI document ingestion
   # ---------------------------------------------------------------------------
-  # fast-api:
-  #   build: ./services/fast-api
-  #   container_name: agentic-fast-api
-  #   restart: unless-stopped
-  #   env_file: .env
-  #   volumes:
-  #     - ./documents:/app/documents
-  #   ports:
-  #     - "${FASTAPI_PORT:-8000}:8000"
-  #   networks:
-  #     - agentic-ai-network
-  #   depends_on:
-  #     minio:
-  #       condition: service_healthy
-  #     qdrant:
-  #       condition: service_healthy
+  fast-api:
+    build: ./services/fast-api
+    container_name: agentic-fast-api
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${FASTAPI_PORT:-8000}:8000"
+    networks:
+      - agentic-ai-network
+    depends_on:
+      minio:
+        condition: service_healthy

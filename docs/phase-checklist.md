@@ -4,13 +4,13 @@
 >
 > Canvas (interactive): open beside chat in Cursor — `agentic-ai-lab-phase-checklist.canvas.tsx`
 
-**Overall:** Phase 1 complete · Phase 2 complete (10/10) · Phases 3–5 pending
+**Overall:** Phase 1 complete · Phase 2 complete (10/10) · Phase 3 complete (10/10) · Phases 4–5 pending
 
 | Metric | Value |
 |--------|-------|
-| Current focus | Phase 3 |
-| Tasks complete | 21 / 51 |
-| Overall progress | ~41% |
+| Current focus | Phase 4 |
+| Tasks complete | 31 / 51 |
+| Overall progress | ~61% |
 
 ---
 
@@ -55,18 +55,18 @@
 
 ## Phase 3 — FastAPI Document Ingestion
 
-*Document upload, OCR utilities, and AI helper endpoints* · **0/10 Pending**
+*Document upload, OCR utilities, and AI helper endpoints* · **10/10 Done**
 
-- [ ] Bootstrap FastAPI project with uvicorn, pydantic settings, and /health
-- [ ] Implement POST /documents/upload with file type validation (PDF, PNG, JPG)
-- [ ] Store uploaded files in MinIO with structured key naming (tenant/doc-id)
-- [ ] Add OCR service integration (Tesseract, Textract, or containerized OCR)
-- [ ] Implement POST /documents/{id}/extract to return parsed text and metadata
-- [ ] Add AI utility endpoints (summarize, classify, chunk preview)
-- [ ] Add Dockerfile and register fastapi service in docker-compose
-- [ ] Document all endpoints in OpenAPI/Swagger UI
-- [ ] Write pytest coverage for upload, storage, and extraction flows
-- [ ] Verify end-to-end: upload sample PDF, extract text, confirm MinIO object exists
+- [x] Bootstrap FastAPI project with uvicorn, pydantic settings, and /health
+- [x] Implement POST /documents/upload with file type validation (PDF, PNG, JPG)
+- [x] Store uploaded files in MinIO with structured key naming (tenant/doc-id)
+- [x] Add OCR service integration (Tesseract, Textract, or containerized OCR)
+- [x] Implement POST /documents/{id}/extract to return parsed text and metadata
+- [x] Add AI utility endpoints (summarize, classify, chunk preview)
+- [x] Add Dockerfile and register fastapi service in docker-compose
+- [x] Document all endpoints in OpenAPI/Swagger UI
+- [x] Write pytest coverage for upload, storage, and extraction flows
+- [x] Verify end-to-end: upload sample PDF, extract text, confirm MinIO object exists
 
 **Exit criteria:** Documents can be uploaded, stored, and text-extracted via API.
 
@@ -114,4 +114,4 @@
 
 Work through **one phase at a time**. Finish all items in the current phase before starting the next — later phases depend on earlier infrastructure and APIs.
 
-**Next up:** Phase 3 (FastAPI Document Ingestion).
+**Next up:** Phase 4 (RAG Pipeline).
